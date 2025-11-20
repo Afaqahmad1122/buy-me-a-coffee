@@ -15,7 +15,12 @@ const PORT = process.env.PORT || 5000;
 // middleware
 app.use(cors());
 app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
-app.use(express.json());
+app.use((req, res, next) => {
+  if (req.originalUrl === "/api/stripe/webhook") {
+    return next();
+  }
+  express.json()(req, res, next);
+});
 app.use(helmet());
 app.use(morgan("dev"));
 
