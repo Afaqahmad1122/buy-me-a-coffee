@@ -13,12 +13,17 @@ export const handleStripeWebhook = async (req, res) => {
 
     if (event.type === "payment_intent.succeeded") {
       const intent = event.data.object;
-      await Supporter.create({
-        name: intent.metadata?.name || "Anonymous",
-        amount: intent.amount,
-        currency: intent.currency,
-        message: intent.metadata?.message || "",
-      });
+      await Supporter.findOneAndUpdate(
+        { paymentIntentId: intent.id },
+        {
+          name: intent.metadata?.name || "Anonymous",
+          amount: intent.amount / 100,
+          currency: intent.currency,
+          message: intent.metadata?.message || "",
+          paymentIntentId: intent.id,
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
     }
 
     res.json({ received: true });
