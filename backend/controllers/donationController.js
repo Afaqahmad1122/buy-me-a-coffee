@@ -4,13 +4,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const createPaymentIntent = async (req, res) => {
   try {
-    const { amount, currency = "usd", name, message } = req.body;
-    if (!amount || amount <= 0) {
+    const { amount, name, message } = req.body;
+    const currency = "usd";
+    const amountInUsd = Number(amount);
+    if (!amountInUsd || amountInUsd <= 0) {
       return res.status(400).json({ error: "Invalid amount" });
     }
 
+    const amountInCents = Math.round(amountInUsd * 100);
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount,
+      amount: amountInCents,
       currency,
       metadata: {
         name: name || "Anonymous",
