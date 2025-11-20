@@ -1,4 +1,5 @@
 import stripe from "../utils/stripe.js";
+import Supporter from "../models/Supporter.js";
 
 export const createPaymentIntent = async (req, res) => {
   try {
@@ -54,5 +55,43 @@ export const createPaymentIntent = async (req, res) => {
   } catch (error) {
     console.error("Error creating payment intent", error);
     res.status(500).json({ error: "Failed to create payment intent" });
+  }
+};
+
+export const recordDonation = async (req, res) => {
+  try {
+    const { paymentIntentId } = req.body;
+
+    if (!paymentIntentId) {
+      return res.status(400).json({ error: "paymentIntentId is required" });
+    }
+
+    const existingSupporter = await Supporter.findOne({ paymentIntentId });
+    if (existingSupporter) {
+      return res.json(existingSupporter);
+    }
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(
+      paymentIntentId
+    );
+
+    if (paymentIntent.status !== "succeeded") {
+      return res
+        .status(400)
+        .json({ error: "Payment intent has not succeeded yet" });
+    }
+
+    const supporter = await Supporter.create({
+      name: paymentIntent.metadata?.name || "Anonymous",
+      amount: paymentIntent.amount / 100,
+      currency: paymentIntent.currency || "usd",
+      message: paymentIntent.metadata?.message || "",
+      paymentIntentId: paymentIntent.id,
+    });
+
+    return res.status(201).json(supporter);
+  } catch (error) {
+    console.error("Error recording donation", error);
+    res.status(500).json({ error: "Failed to record donation" });
   }
 };

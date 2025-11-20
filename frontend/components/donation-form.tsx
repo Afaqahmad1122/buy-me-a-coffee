@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import type { StripeCardElementOptions } from "@stripe/stripe-js";
 import { toast } from "sonner";
 import { useCreateDonationIntent } from "../hooks/useDonations";
+import { recordDonation } from "../lib/services/donations";
 
 const presetAmounts = [25, 50, 100, 250, 500];
 
@@ -25,6 +27,7 @@ const cardElementOptions: StripeCardElementOptions = {
 export function DonationForm() {
   const stripe = useStripe();
   const elements = useElements();
+  const queryClient = useQueryClient();
   const [amount, setAmount] = useState(50);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
@@ -89,6 +92,16 @@ export function DonationForm() {
           confirmation.error?.message || "Payment could not be confirmed."
         );
       }
+
+      if (!confirmation.paymentIntent?.id) {
+        throw new Error("Missing payment confirmation details.");
+      }
+
+      await recordDonation({
+        paymentIntentId: confirmation.paymentIntent.id,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ["supporters"] });
 
       toast.success("Donation confirmed! 🎉");
       setLastPaymentId(confirmation.paymentIntent.id);
