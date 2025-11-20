@@ -1,14 +1,8 @@
 import express from "express";
-import Supporter from "../models/Supporter.js";
+import { getRecentSupporters } from "../controllers/supporterController.js";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
-  const limit = Number(req.query.limit) || 10;
-  const supporters = await Supporter.find()
-    .sort({ createdAt: -1 })
-    .limit(limit);
-  res.json(supporters);
-});
+router.get("/", getRecentSupporters);
 
 export default router;
