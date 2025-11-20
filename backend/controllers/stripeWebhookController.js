@@ -1,7 +1,5 @@
-import Stripe from "stripe";
+import stripe from "../utils/stripe.js";
 import Supporter from "../models/Supporter.js";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const handleStripeWebhook = async (req, res) => {
   const signature = req.headers["stripe-signature"];

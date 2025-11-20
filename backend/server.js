@@ -5,7 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import connectDB from "./utils/db.js";
 import donationsRouter from "./routes/donation.js";
-import webhookRouter from "./routes/stripeWebhook.js";
+import stripeRouter from "./routes/stripe.js";
 import supportersRouter from "./routes/supporters.js";
 
 const app = express();
@@ -25,7 +25,7 @@ app.use(helmet());
 app.use(morgan("dev"));
 
 app.use("/api/donations", donationsRouter);
-app.use("/api/stripe", webhookRouter);
+app.use("/api/stripe", stripeRouter);
 app.use("/api/supporters", supportersRouter);
 
 // routes
